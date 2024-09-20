@@ -3,24 +3,12 @@ package modal_proxy
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
 	"strings"
 )
-
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type RequestBody struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Stream   bool      `json:"stream"`
-}
 
 type OpenAIModalProvider struct {
 	apiUrl string
@@ -39,35 +27,16 @@ func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx) error {
 	if c.Method() != http.MethodPost {
 		return c.Status(fiber.StatusMethodNotAllowed).SendString("Only POST method is allowed")
 	}
-	var reqBody RequestBody
-	if err := c.BodyParser(&reqBody); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("Invalid request body")
-	}
-
-	body, err := json.Marshal(reqBody)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Error marshalling request body")
-	}
-
-	req, err := http.NewRequest(http.MethodPost, mp.apiUrl, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, mp.apiUrl, bytes.NewBuffer(c.Body()))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error creating request")
 	}
-	reqHeaders := c.GetReqHeaders()
-	for key, values := range reqHeaders {
-		for _, value := range values {
-			req.Header.Add(key, value)
-		}
-	}
+	copyHeadersFromIncomingRequest(c, req)
 	resp, err := client.Do(req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error making request to OpenAI API")
 	}
-
-	for key, value := range resp.Header {
-		c.Set(key, value[0])
-	}
-
+	copyReadersToOutgoingResponse(c, resp)
 	if resp.StatusCode != http.StatusOK {
 		return c.Status(resp.StatusCode).SendString("Error response from OpenAI API: " + resp.Status)
 	}
@@ -99,4 +68,21 @@ func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx) error {
 		}
 	})
 	return nil
+}
+
+func copyReadersToOutgoingResponse(c *fiber.Ctx, resp *http.Response) {
+	for key, value := range resp.Header {
+		for val := range value {
+			c.Response().Header.Add(key, value[val])
+		}
+	}
+}
+
+func copyHeadersFromIncomingRequest(c *fiber.Ctx, req *http.Request) {
+	reqHeaders := c.GetReqHeaders()
+	for key, values := range reqHeaders {
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
 }

@@ -20,6 +20,10 @@ func main() {
 	app.Post("/v1/chat/completions", func(ctx *fiber.Ctx) error {
 		return openAiModalProvider.GetCompletion(ctx)
 	})
+	//Python client adds the v1 prefix to the endpoint, thus need to not add it here.
+	app.Post("/chat/completions", func(ctx *fiber.Ctx) error {
+		return openAiModalProvider.GetCompletion(ctx)
+	})
 
 	// Graceful shutdown
 	sigs := make(chan os.Signal, 1)
