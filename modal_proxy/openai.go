@@ -82,11 +82,14 @@ func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx) error {
 					break
 				}
 				c.Status(fiber.StatusInternalServerError)
-				fmt.Fprint(w, "Error reading response from OpenAI API")
+				_, err := fmt.Fprint(w, "Error reading response from OpenAI API")
+				if err != nil {
+					break
+				}
 			}
 			line := string(lineBytes)
-			fmt.Fprint(w, line)
-			w.Flush()
+			_, err = fmt.Fprint(w, line)
+			err = w.Flush()
 			if strings.Contains(line, "[DONE]") {
 				break
 			}

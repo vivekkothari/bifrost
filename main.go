@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bifrost/modal_proxy"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"os"
 	"os/signal"
-	"vector-cache/modal_proxy"
 )
 
 const PORT = 3000
@@ -30,7 +30,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	fmt.Println("Starting proxy server on :%d", PORT)
+	fmt.Printf("Starting proxy server on :%d\n", PORT)
 	if err := app.Listen(fmt.Sprintf(":%d", PORT)); err != nil {
 		fmt.Println("Error starting server:", err)
 	}

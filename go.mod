@@ -1,4 +1,4 @@
-module vector-cache
+module bifrost
 
 go 1.23.1
 
