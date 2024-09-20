@@ -6,7 +6,7 @@ require (
 	github.com/amikos-tech/chroma-go v0.1.4
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/google/uuid v1.6.0
-	github.com/openai/openai-go v0.1.0-alpha.18
+	github.com/openai/openai-go v0.1.0-alpha.19
 )
 
 require (
