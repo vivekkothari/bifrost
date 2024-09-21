@@ -8,7 +8,7 @@ llm = ChatOpenAI(
     max_tokens=None,
     timeout=None,
     max_retries=2,
-    api_key=os.getenv("OPEN_API_KEY"),
+    api_key=os.getenv("OPENAI_API_KEY"),
     base_url="http://localhost:3000",
     # organization="...",
     # other params...

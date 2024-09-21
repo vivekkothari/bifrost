@@ -4,7 +4,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:3000",
-    api_key=os.getenv("OPEN_API_KEY")
+    api_key=os.getenv("OPENAI_API_KEY")
     # this is also the default, it can be omitted
 )
 

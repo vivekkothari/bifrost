@@ -25,11 +25,12 @@ func NewOpenAIProvider(apiUrl string) *OpenAIModalProvider {
 var client = &http.Client{}
 
 // GetCompletion Implement method.
-func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx) error {
+func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error {
 	if c.Method() != http.MethodPost {
 		return c.Status(fiber.StatusMethodNotAllowed).SendString("Only POST method is allowed")
 	}
-	req, err := http.NewRequest(http.MethodPost, mp.apiUrl, bytes.NewBuffer(c.Body()))
+	fmt.Printf("Received request to OpenAI API %s\n", string(c.Body()))
+	req, err := http.NewRequest(http.MethodPost, mp.apiUrl+apiPath, bytes.NewBuffer(c.Body()))
 	if err != nil || req == nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error creating request")
 	}

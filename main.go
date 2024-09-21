@@ -14,15 +14,19 @@ func main() {
 	// Initialize a new Fiber app
 	app := fiber.New()
 
-	openAiModalProvider := modal_proxy.NewOpenAIProvider("https://api.openai.com/v1/chat/completions")
+	openAiModalProvider := modal_proxy.NewOpenAIProvider("https://api.openai.com")
 
 	//OpenAI proxy
 	app.Post("/v1/chat/completions", func(ctx *fiber.Ctx) error {
-		return openAiModalProvider.GetCompletion(ctx)
+		return openAiModalProvider.GetCompletion(ctx, "/v1/chat/completions")
 	})
 	//Python client adds the v1 prefix to the endpoint, thus need to not add it here.
 	app.Post("/chat/completions", func(ctx *fiber.Ctx) error {
-		return openAiModalProvider.GetCompletion(ctx)
+		return openAiModalProvider.GetCompletion(ctx, "/v1/chat/completions")
+	})
+	//llamaindex uses completions API
+	app.Post("/completions", func(ctx *fiber.Ctx) error {
+		return openAiModalProvider.GetCompletion(ctx, "/v1/completions")
 	})
 
 	// Graceful shutdown
