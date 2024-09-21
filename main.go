@@ -29,13 +29,17 @@ func main() {
 		return openAiModalProvider.GetCompletion(ctx, "/v1/completions")
 	})
 
-	// Graceful shutdown
+	// Setup graceful shutdown
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt)
+	signal.Notify(sigs, os.Interrupt, os.Kill)
+
 	go func() {
 		<-sigs
 		fmt.Println("\nShutting down gracefully...")
-		os.Exit(0)
+		// Gracefully shutdown the server
+		if err := app.Shutdown(); err != nil {
+			fmt.Println("Error shutting down the server:", err)
+		}
 	}()
 
 	fmt.Printf("Starting proxy server on :%d\n", PORT)

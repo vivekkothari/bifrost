@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type OpenAIModalProvider struct {
@@ -22,7 +23,9 @@ func NewOpenAIProvider(apiUrl string) *OpenAIModalProvider {
 	}
 }
 
-var client = &http.Client{}
+var client = &http.Client{
+	Timeout: 2 * time.Minute, // Add timeout for the HTTP client
+}
 
 // GetCompletion Implement method.
 func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error {
@@ -67,21 +70,34 @@ func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error
 	if strings.Contains(contentType, "text/event-stream") {
 		c.Status(fiber.StatusOK).Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 			bufWriter := bufio.NewWriter(w)
+			defer closeResponse(resp)
 			for {
-				resp.Header.Get("Content-Type")
 				lineBytes, err := bufReader.ReadBytes('\n')
 				if err != nil {
 					if err == io.EOF {
 						break
 					}
-					c.Status(fiber.StatusInternalServerError)
-					_, err := fmt.Fprint(bufWriter, "Error reading response from OpenAI API")
+					_, err := fmt.Fprintf(bufWriter, "Error reading response from OpenAI API\n")
 					if err != nil {
-						break
+						return
 					}
+					err = bufWriter.Flush()
+					if err != nil {
+						return
+					}
+					break
 				}
+				if len(lineBytes) == 0 {
+					continue
+				}
+
 				line := string(lineBytes)
-				_, err = fmt.Fprint(bufWriter, line)
+				_, err = bufWriter.WriteString(line)
+				if err != nil {
+					fmt.Printf("Error writing response: %v\n", err)
+					break
+				}
+
 				err = bufWriter.Flush()
 				if err != nil {
 					fmt.Printf("Error flushing buffer: %v\n", err)
@@ -90,11 +106,7 @@ func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error
 				if strings.Contains(line, "[DONE]") {
 					break
 				}
-				if len(lineBytes) == 0 {
-					continue
-				}
 			}
-			defer closeResponse(resp)
 		})
 	} else {
 		// Handle non-streaming content (read all at once)
