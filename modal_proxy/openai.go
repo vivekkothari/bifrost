@@ -25,6 +25,12 @@ func NewOpenAIProvider(apiUrl string) *OpenAIModalProvider {
 
 var client = &http.Client{
 	Timeout: 2 * time.Minute, // Add timeout for the HTTP client
+	Transport: &http.Transport{
+		MaxIdleConns:        100,
+		IdleConnTimeout:     90 * time.Second,
+		MaxConnsPerHost:     100,
+		MaxIdleConnsPerHost: 10,
+	},
 }
 
 // GetCompletion Implement method.

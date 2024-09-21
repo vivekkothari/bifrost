@@ -6,13 +6,19 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"os"
 	"os/signal"
+	"time"
 )
 
 const PORT = 3000
 
 func main() {
 	// Initialize a new Fiber app
-	app := fiber.New()
+	app := fiber.New(
+		fiber.Config{
+			Prefork:           true,            // Enables prefork mode (uses multiple Go processes)
+			IdleTimeout:       5 * time.Second, // Timeout for idle connections
+			ReduceMemoryUsage: true,            // Reduces memory usage by freeing up resources more aggressively
+		})
 
 	openAiModalProvider := modal_proxy.NewOpenAIProvider("https://api.openai.com")
 
