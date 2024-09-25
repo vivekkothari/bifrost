@@ -15,7 +15,7 @@ func main() {
 	// Initialize a new Fiber app
 	app := fiber.New(
 		fiber.Config{
-			Prefork:           true,            // Enables prefork mode (uses multiple Go processes)
+			Prefork:           false,           // Disable prefork mode (uses multiple Go processes)
 			IdleTimeout:       5 * time.Second, // Timeout for idle connections
 			ReduceMemoryUsage: true,            // Reduces memory usage by freeing up resources more aggressively
 		})

@@ -17,13 +17,10 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o bifrost .
 
 # Start a new stage from scratch
-FROM alpine:latest
+FROM golang:1.23.1
 
 # Set working directory inside the new stage
 WORKDIR /root/
-
-# Install certificates in case HTTPS connections are needed by the app
-RUN apk --no-cache add ca-certificates
 
 # Copy the pre-built binary file from the previous stage
 COPY --from=builder /app/bifrost .
