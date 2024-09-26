@@ -1,11 +1,24 @@
 package modal_proxy
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 )
+
+var client = &http.Client{
+	Timeout: 2 * time.Minute, // Add timeout for the HTTP client
+	Transport: &http.Transport{
+		MaxIdleConns:        100,
+		IdleConnTimeout:     90 * time.Second,
+		MaxConnsPerHost:     100,
+		MaxIdleConnsPerHost: 10,
+	},
+}
 
 // ModalProviderInterface defines the interface for calling different modals.
 type ModalProviderInterface interface {
@@ -36,4 +49,57 @@ func copyHeadersFromIncomingRequest(c *fiber.Ctx, req *http.Request) {
 			req.Header.Add(key, value)
 		}
 	}
+}
+
+func streamResponse(c *fiber.Ctx, resp *http.Response, bufReader *bufio.Reader) {
+	c.Status(fiber.StatusOK).Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		bufWriter := bufio.NewWriter(w)
+		defer closeResponse(resp)
+		for {
+			lineBytes, err := bufReader.ReadBytes('\n')
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				_, err := fmt.Fprintf(bufWriter, "Error reading response from ModalProvider API\n")
+				if err != nil {
+					return
+				}
+				err = bufWriter.Flush()
+				if err != nil {
+					return
+				}
+				break
+			}
+			if len(lineBytes) == 0 {
+				continue
+			}
+
+			line := string(lineBytes)
+			_, err = bufWriter.WriteString(line)
+			if err != nil {
+				fmt.Printf("Error writing response: %v\n", err)
+				break
+			}
+
+			err = bufWriter.Flush()
+			if err != nil {
+				fmt.Printf("Error flushing buffer: %v\n", err)
+				break
+			}
+			if strings.Contains(line, "[DONE]") {
+				break
+			}
+		}
+	})
+}
+
+func blockingResponse(c *fiber.Ctx, reader io.Reader) error {
+	bodyBytes, err := io.ReadAll(reader)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString("Error reading response body")
+	}
+	// Remove the Content-Encoding header because the content has been decompressed
+	c.Response().Header.Del("Content-Encoding")
+	return c.Status(fiber.StatusOK).SendString(string(bodyBytes))
 }

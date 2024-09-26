@@ -12,18 +12,18 @@ import (
 	"strings"
 )
 
-type OpenAIModalProvider struct {
+type AnthropicModalProvider struct {
 	apiUrl string
 }
 
-func NewOpenAIProvider(apiUrl string) *OpenAIModalProvider {
-	return &OpenAIModalProvider{
+func NewAnthropicModalProvider(apiUrl string) *AnthropicModalProvider {
+	return &AnthropicModalProvider{
 		apiUrl: apiUrl,
 	}
 }
 
 // GetCompletion Implement method.
-func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error {
+func (mp *AnthropicModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error {
 	if c.Method() != http.MethodPost {
 		return c.Status(fiber.StatusMethodNotAllowed).SendString("Only POST method is allowed")
 	}
@@ -42,7 +42,7 @@ func (mp *OpenAIModalProvider) GetCompletion(c *fiber.Ctx, apiPath string) error
 		return c.Status(fiber.StatusInternalServerError).SendString("Error: response body is nil")
 	}
 	if resp.StatusCode != http.StatusOK {
-		return c.Status(resp.StatusCode).SendString("Error response from OpenAI API: " + resp.Status)
+		return c.Status(resp.StatusCode).SendString("Error response from Anthropic API: " + resp.Status)
 	}
 
 	// Detect Content-Encoding and handle Brotli, Gzip, or plain text

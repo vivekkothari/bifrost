@@ -21,6 +21,7 @@ func main() {
 		})
 
 	openAiModalProvider := modal_proxy.NewOpenAIProvider("https://api.openai.com")
+	anthropicAiModalProvider := modal_proxy.NewAnthropicModalProvider("https://api.anthropic.com")
 
 	//OpenAI proxy
 	app.Post("/v1/chat/completions", func(ctx *fiber.Ctx) error {
@@ -33,6 +34,9 @@ func main() {
 	//llamaindex uses completions API
 	app.Post("/completions", func(ctx *fiber.Ctx) error {
 		return openAiModalProvider.GetCompletion(ctx, "/v1/completions")
+	})
+	app.Post("/v1/messages", func(ctx *fiber.Ctx) error {
+		return anthropicAiModalProvider.GetCompletion(ctx, "/v1/messages")
 	})
 
 	// Setup graceful shutdown
