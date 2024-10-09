@@ -2,6 +2,7 @@ package modal_proxy
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"io"
@@ -32,6 +33,19 @@ func closeResponse(resp *http.Response) {
 			fmt.Printf("Error closing response body: %v\n", err)
 		}
 	}(resp.Body)
+}
+
+func GetMaximApiKey(reqHeaders map[string][]string) (string, error) {
+	const apiKey = "x-maxim-api-key"
+	// Check if the key exists in the map
+	if values, ok := reqHeaders[apiKey]; ok {
+		// Check if there is at least one value associated with the key
+		if len(values) > 0 {
+			return values[0], nil
+		}
+		return "", errors.New("x-maxim-api-key exists but no value associated with it")
+	}
+	return "", errors.New("x-maxim-api-key not found")
 }
 
 func copyReadersToOutgoingResponse(c *fiber.Ctx, resp *http.Response) {
