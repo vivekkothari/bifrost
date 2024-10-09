@@ -1,6 +1,7 @@
 package modal_proxy
 
 import (
+	"bifrost/maxim"
 	"bufio"
 	"bytes"
 	"compress/gzip"
@@ -8,6 +9,7 @@ import (
 	"github.com/andybalholm/brotli"
 	"github.com/gofiber/fiber/v2"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 )
@@ -20,6 +22,22 @@ func NewAnthropicModalProvider(apiUrl string) *AnthropicModalProvider {
 	return &AnthropicModalProvider{
 		apiUrl: apiUrl,
 	}
+}
+
+func (mp *AnthropicModalProvider) GetApiKey(reqHeaders map[string][]string, modal string) (string, error) {
+	maximApiKey, err := GetMaximApiKey(reqHeaders)
+	if err != nil {
+		return "", err
+	}
+	account, err := maxim.GetMaximAccount(maximApiKey)
+	if err != nil {
+		return "", err
+	}
+	//FIXME: This is a temporary solution to get a random API key from the list of API keys,
+	// eventually we will need to implement a more sophisticated way to select the API key which
+	// looks at the response as well
+	index := rand.Int() % len(account.Data.Anthropic)
+	return account.Data.Anthropic[index].APIKey, nil
 }
 
 // GetCompletion Implement method.

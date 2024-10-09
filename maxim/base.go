@@ -1,6 +1,9 @@
 package maxim
 
 import (
+	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"time"
 )
@@ -62,4 +65,29 @@ var client = &http.Client{
 		MaxConnsPerHost:     100,
 		MaxIdleConnsPerHost: 10,
 	},
+}
+
+// GetMaximAccount gets the accounts from the Maxim API
+func GetMaximAccount(key string) (AccountsResponse, error) {
+	// Call the Maxim API to get the accounts
+	var result AccountsResponse
+	//FIXME: Fix the API path
+	req, err := http.NewRequest(http.MethodGet, "https://maxim.example.com/api/bifrost/v1/accounts", nil)
+	if err != nil {
+		return AccountsResponse{}, err
+	}
+	req.Header.Set("x-maxim-api-key", key)
+	resp, err := client.Do(req)
+	if err != nil {
+		return AccountsResponse{}, err
+	}
+	if resp.Body == nil {
+		return AccountsResponse{}, errors.New("response body is nil")
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	err = json.Unmarshal(bodyBytes, &result)
+	if err != nil {
+		return AccountsResponse{}, err
+	}
+	return result, nil
 }

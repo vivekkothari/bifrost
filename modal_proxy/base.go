@@ -24,6 +24,9 @@ var client = &http.Client{
 // ModalProviderInterface defines the interface for calling different modals.
 type ModalProviderInterface interface {
 	GetCompletion(c *fiber.Ctx) error
+
+	// GetApiKey returns the API key for the modal provider and the selected modal.
+	GetApiKey(reqHeaders map[string][]string, modal string) (string, error)
 }
 
 func closeResponse(resp *http.Response) {
