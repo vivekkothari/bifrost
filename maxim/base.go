@@ -68,7 +68,7 @@ var client = &http.Client{
 }
 
 // GetMaximAccount gets the accounts from the Maxim API
-func GetMaximAccount(key string) (AccountsResponse, error) {
+func GetMaximAccount(maximApiKey string) (AccountsResponse, error) {
 	// Call the Maxim API to get the accounts
 	var result AccountsResponse
 	//FIXME: Fix the API path
@@ -76,7 +76,7 @@ func GetMaximAccount(key string) (AccountsResponse, error) {
 	if err != nil {
 		return AccountsResponse{}, err
 	}
-	req.Header.Set("x-maxim-api-key", key)
+	req.Header.Set("x-maxim-api-key", maximApiKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		return AccountsResponse{}, err
@@ -85,6 +85,9 @@ func GetMaximAccount(key string) (AccountsResponse, error) {
 		return AccountsResponse{}, errors.New("response body is nil")
 	}
 	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return AccountsResponse{}, err
+	}
 	err = json.Unmarshal(bodyBytes, &result)
 	if err != nil {
 		return AccountsResponse{}, err
